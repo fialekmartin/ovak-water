@@ -1,0 +1,9 @@
+{
+  "domain": "ovak",
+  "name": "OVAK Water",
+  "version": "0.1.4",
+  "config_flow": true,
+  "documentation": "https://github.com/Meridian85/Node-RED_OVAK",
+  "requirements": [],
+  "iot_class": "cloud_polling"
+}

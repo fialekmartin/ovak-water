@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Local secrets and recorded traffic
+*credentials*.json
+*cookies*.json
+*.har
+.env
+.env.*
+!*.example
+secrets.yaml
+waterConsuption.json
+waterConsumption.json
+
+# Local HA state and generated artifacts
+.storage/
+*.db
+*.db-*
+*.log
+dist/
+build/
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,20 @@
+name: Release
+on:
+  push:
+    tags:
+      - 'v*'
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package integration
+        run: |
+          cd custom_components/ovak
+          zip -r ../../ovak.zip . -x '*/__pycache__/*'
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: ovak.zip
+          generate_release_notes: true

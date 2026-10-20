@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "OVAK",
+        "description": "Přihlašovací údaje pro ZIS OVAK",
+        "data": {
+          "username": "E-mail",
+          "password": "Heslo"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "daily": {
+        "name": "Včerejší spotřeba"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "OVAK – synchronizace",
+        "data": {
+          "sync_time": "Čas denní synchronizace"
+        }
+      }
+    }
+  }
+}

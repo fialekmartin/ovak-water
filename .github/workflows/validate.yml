@@ -1,0 +1,29 @@
+name: Validate
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Compile Python
+        run: python -m compileall -q custom_components/ovak
+      - name: Validate JSON and manifest
+        run: |
+          python - <<'PYCODE'
+          import json
+          from pathlib import Path
+          for path in Path('custom_components/ovak').rglob('*.json'):
+              json.loads(path.read_text(encoding='utf-8'))
+          manifest = json.loads(Path('custom_components/ovak/manifest.json').read_text())
+          assert manifest['domain'] == 'ovak'
+          assert manifest['config_flow'] is True
+          assert manifest['version'] == '0.1.4'
+          print('OK')
+          PYCODE
