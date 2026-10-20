@@ -10,13 +10,19 @@ Neoficiální vlastní integrace pro **Home Assistant OS / Home Assistant Core**
 - Jednou denně synchronizace v **nastavitelný čas** v časové zóně Home Assistantu (výchozí `06:00`).
 - Senzor **Včerejší spotřeba** v m³; poslední hodnota se obnoví po restartu i změně konfigurace bez kontaktování portálu.
 - Doplnění nových denních statistik do existující externí řady `ovak:water_consumption` (Energy dashboard).
-- Import historie není součástí první konfigurace.
+- Jednorázová **automatická migrace historie** přes `tools/migrate_history.py` (ZIS/SSO → validace → Recorder; dry-run) nebo import ze souboru `tools/import_history.py`.
 
 ## Důležité: historická statistika je podmínka
 
-Integrace **nevytváří počáteční historii**. Před první synchronizací musí v Recorderu existovat externí statistika s ID `ovak:water_consumption`, jejíž denní hodnoty jsou přiřazeny k půlnoci **následujícího dne** a průběžný součet (`sum`) odpovídá již importované historii. Jinak integrace zaznamená chybu a nic nezapíše.
+Integrace **nevytváří počáteční historii automaticky**. Pro jednorázový import použijte nástroj v `tools/import_history.py` podle [návodu](docs/HISTORY_IMPORT.md). Před první synchronizací musí v Recorderu existovat externí statistika s ID `ovak:water_consumption`, jejíž denní hodnoty jsou přiřazeny k půlnoci **následujícího dne** a průběžný součet (`sum`) odpovídá již importované historii. Jinak integrace zaznamená chybu a nic nezapíše.
 
 Nepropojujte stejnou spotřebu současně s další kumulativní statistikou – mohlo by dojít k dvojímu vykazování. Před testováním si vytvořte zálohu HA.
+
+## Import historie
+
+**Doporučená varianta bez cookies:** [Automatické stažení a import](docs/AUTOMATED_MIGRATION.md).
+
+Ruční import z JSON: [docs/HISTORY_IMPORT.md](docs/HISTORY_IMPORT.md).
 
 ## Instalace (ruční)
 
