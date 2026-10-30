@@ -1,5 +1,5 @@
-"""OVAK daily consumption sensor with restored last known reading."""
-from datetime import date
+"""OVAK sensors with restored last known values."""
+from datetime import date, datetime
 import logging
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
@@ -13,7 +13,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    async_add_entities([OvakDailySensor(hass.data[DOMAIN][entry.entry_id])])
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([
+        OvakDailySensor(coordinator),
+        OvakLastSuccessfulDownloadSensor(coordinator),
+    ])
 
 
 class OvakDailySensor(RestoreEntity, SensorEntity):
@@ -75,4 +79,53 @@ class OvakDailySensor(RestoreEntity, SensorEntity):
         self.coordinator.last_day = restored_day
         self.coordinator.last_m3 = restored_value
         _LOGGER.debug("OVAK: restored reading from %s", restored_day)
+        self.async_write_ha_state()
+
+
+class OvakLastSuccessfulDownloadSensor(RestoreEntity, SensorEntity):
+    """Show when OVAK last returned and processed a requested reading."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "last_successful_download"
+    _attr_unique_id = "ovak_last_successful_download"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_device_info = DeviceInfo(
+        identifiers={(DOMAIN, "ovak_water")}, name="OVAK Water"
+    )
+
+    def __init__(self, coordinator):
+        self.coordinator = coordinator
+
+    @property
+    def available(self):
+        return self.coordinator.last_successful_download is not None
+
+    @property
+    def native_value(self):
+        return self.coordinator.last_successful_download
+
+    async def async_added_to_hass(self):
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
+
+        if self.coordinator.last_successful_download is not None:
+            return
+        last_state = await self.async_get_last_state()
+        if last_state is None or last_state.state in (
+            "unknown", "unavailable", "none", ""
+        ):
+            return
+        try:
+            restored = datetime.fromisoformat(last_state.state)
+            if restored.tzinfo is None:
+                raise ValueError("timestamp has no timezone")
+        except (ValueError, TypeError):
+            _LOGGER.warning(
+                "OVAK: invalid previous successful-download timestamp"
+            )
+            return
+        self.coordinator.last_successful_download = restored
+        _LOGGER.debug("OVAK: restored successful download time %s", restored)
         self.async_write_ha_state()

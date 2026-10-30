@@ -14,6 +14,8 @@ jobs:
           python-version: '3.13'
       - name: Compile Python
         run: python -m compileall -q custom_components/ovak
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
       - name: Validate JSON and manifest
         run: |
           python - <<'PYCODE'
@@ -24,6 +26,6 @@ jobs:
           manifest = json.loads(Path('custom_components/ovak/manifest.json').read_text())
           assert manifest['domain'] == 'ovak'
           assert manifest['config_flow'] is True
-          assert manifest['version'] == '0.1.5'
+          assert manifest['version'] == '0.1.7'
           print('OK')
           PYCODE

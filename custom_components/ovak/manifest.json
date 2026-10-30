@@ -1,7 +1,7 @@
 {
   "domain": "ovak",
   "name": "OVAK Water",
-  "version": "0.1.5",
+  "version": "0.1.7",
   "config_flow": true,
   "documentation": "https://github.com/Meridian85/Node-RED_OVAK",
   "requirements": [],

@@ -14,7 +14,7 @@ from .api import fetch_days
 from .const import DOMAIN, STATISTIC_ID
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS = ['sensor']
+PLATFORMS = ['sensor', 'button']
 RETRY_INTERVAL = timedelta(hours=3)
 
 class OvakCoordinator:
@@ -23,6 +23,7 @@ class OvakCoordinator:
         self.entry = entry
         self.last_day = None
         self.last_m3 = None
+        self.last_successful_download = None
         self._listeners = []
         self._running = False
         self._cancel_retry = None
@@ -48,7 +49,7 @@ class OvakCoordinator:
             if not rows:
                 _LOGGER.error('OVAK: initial statistics %s missing; import history first', STATISTIC_ID)
                 # Retrying cannot fix a missing local prerequisite.
-                return True
+                return None
             row = rows[-1]
             # The import script places each daily value at midnight of the following day.
             local = datetime.fromtimestamp(row['start'], self._tz)
@@ -67,8 +68,7 @@ class OvakCoordinator:
                     )
                 self.last_day = yesterday
                 self.last_m3 = readings[yesterday] / 1000
-                for listener in tuple(self._listeners):
-                    listener()
+                self._record_successful_download()
                 return True
             # Cap catch-up request interval; repeated poll catches up over time.
             last = min(yesterday, first + timedelta(days=30))
@@ -101,8 +101,7 @@ class OvakCoordinator:
             }, stats)
             self.last_day = last
             self.last_m3 = readings[last] / 1000
-            for listener in tuple(self._listeners):
-                listener()
+            self._record_successful_download()
             _LOGGER.info('OVAK: queued %d new daily statistics through %s', len(stats), last)
             return True
         except Exception:
@@ -114,17 +113,35 @@ class OvakCoordinator:
     async def refresh_with_retry(self, attempt_day=None):
         """Refresh and retry failures every three hours during the same day."""
         if self._stopped:
-            return
+            return None
         attempt_day = attempt_day or datetime.now(self._tz).date()
         if datetime.now(self._tz).date() != attempt_day:
             _LOGGER.info('OVAK: retry window for %s expired', attempt_day)
-            return
+            return None
 
         result = await self.refresh()
         if result is False:
             self._schedule_retry(attempt_day)
         elif result is True:
             self._cancel_pending_retry()
+        return result
+
+    async def manual_refresh(self):
+        """Refresh on demand unless yesterday's reading is already loaded."""
+        yesterday = datetime.now(self._tz).date() - timedelta(days=1)
+        if self.last_day is not None and self.last_day >= yesterday:
+            _LOGGER.info(
+                'OVAK: manual update skipped; reading for %s is already loaded',
+                yesterday,
+            )
+            return False
+
+        # A manual failure must not move or create the automatic retry timer.
+        result = await self.refresh()
+        if result is True:
+            self._cancel_pending_retry()
+            _LOGGER.info('OVAK: manual update completed')
+        return result
 
     def _schedule_retry(self, attempt_day):
         self._cancel_pending_retry()
@@ -152,6 +169,12 @@ class OvakCoordinator:
         if self._cancel_retry is not None:
             self._cancel_retry()
             self._cancel_retry = None
+
+    def _record_successful_download(self):
+        """Store the completion time and notify all coordinator entities."""
+        self.last_successful_download = datetime.now(self._tz)
+        for listener in tuple(self._listeners):
+            listener()
 
     def shutdown(self):
         """Cancel callbacks owned by the coordinator."""

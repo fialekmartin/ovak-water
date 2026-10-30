@@ -12,9 +12,17 @@
     }
   },
   "entity": {
+    "button": {
+      "refresh": {
+        "name": "Aktualizovat data"
+      }
+    },
     "sensor": {
       "daily": {
         "name": "Včerejší spotřeba"
+      },
+      "last_successful_download": {
+        "name": "Poslední úspěšné stažení"
       }
     }
   },
