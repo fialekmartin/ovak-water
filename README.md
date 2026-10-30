@@ -2,12 +2,12 @@
 
 Neoficiální vlastní integrace pro **Home Assistant OS / Home Assistant Core**. Čte denní spotřebu vody z OVAK přes zákaznický portál ZIS a SSO do eMIS. Zdroj inspirace pro přihlašovací postup: [Node-RED_OVAK](https://github.com/Meridian85/Node-RED_OVAK).
 
-> **Stav:** `0.1.4`, komunitní neoficiální integrace, testovaná v konkrétní instalaci uživatele. Není schválená ani podporovaná OVAK. Změny na portálu mohou přístup rozbít.
+> **Stav:** `0.1.5`, komunitní neoficiální integrace, testovaná v konkrétní instalaci uživatele. Není schválená ani podporovaná OVAK. Změny na portálu mohou přístup rozbít.
 
 ## Funkce
 
 - Přihlášení uživatelským jménem a heslem do ZIS OVAK, přechod přes SSO do eMIS.
-- Jednou denně synchronizace v **nastavitelný čas** v časové zóně Home Assistantu (výchozí `06:00`).
+- Jednou denně synchronizace v **nastavitelný čas** v časové zóně Home Assistantu (výchozí `06:00`). Pokud se stažení nezdaří, integrace je opakuje každé 3 hodiny až do úspěchu nebo do konce daného dne.
 - Senzor **Včerejší spotřeba** v m³; poslední hodnota se obnoví po restartu i změně konfigurace bez kontaktování portálu.
 - Doplnění nových denních statistik do existující externí řady `ovak:water_consumption` (Energy dashboard).
 - Jednorázová **automatická migrace historie** přes `tools/migrate_history.py` (ZIS/SSO → validace → Recorder; dry-run) nebo import ze souboru `tools/import_history.py`.
